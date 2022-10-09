@@ -1,6 +1,6 @@
 [package]
 name = "unicode_skeleton"
-version = "0.1.2"
+version = "0.1.2.1"
 authors = ["Peter Reid <peter@peterreid.net>"]
 exclude = [
     "data/*",
@@ -22,6 +22,4 @@ Unicode Standard Annex #39.
 unicode-normalization = "0.1.5"
 
 [features]
-numeral_safety = []
-code_safety = []
 

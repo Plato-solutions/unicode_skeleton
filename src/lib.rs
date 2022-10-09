@@ -53,17 +53,7 @@ const CODE_CHARS:[char; 22] = ['¦','(',')','^','<','>','=','*','/','\\','#','@'
 
 impl PrototypeCharsIterator {
     pub fn new(c: char) -> PrototypeCharsIterator {
-        #[cfg(feature="numeral_safety")]
-            let mut exclude = c.is_numeric();
-        #[cfg(not(feature="numeral_safety"))]
-            let mut exclude = false;
-
-        #[cfg(feature="code_safety")]{
-            exclude = exclude && CODE_CHARS.contains(&c); }
-        #[cfg(not(feature="code_safety"))]{
-            exclude = exclude && false;}
-
-        if exclude {
+        if !core::unicode.Is(core::unicode.Cyrillic, c) {
             PrototypeCharsIterator::One(Some(c))
         }
         else if let Ok(input_index) = data::INPUT_AND_OUTPUT_INDICES.binary_search_by_key(&(c as u32), |entry| entry.0) {
