@@ -48,22 +48,27 @@ enum PrototypeCharsIterator {
     Slice(slice::Iter<'static, char>),
 }
 
-#[cfg(feature="code_safety")]
-const CODE_CHARS:[char; 22] = ['¦','(',')','^','<','>','=','*','/','\\','#','@','[',']','{','}','!','%','+','-',',','`'];
+extern crate utf8_ranges; //@TODO remove
+use utf8_ranges::{Utf8Sequence, Utf8Sequences};
 
 impl PrototypeCharsIterator {
     pub fn new(c: char) -> PrototypeCharsIterator {
-        if !core::unicode.Is(core::unicode.Cyrillic, c) {
-            PrototypeCharsIterator::One(Some(c))
+        let mut cyrillic:Vec<_> = Utf8Sequences::new('\u{0400}', '\u{04FF}').collect();
+        let mut extended_cyrillic:Vec<_> = Utf8Sequences::new('\u{0500}', '\u{052F}').collect();
+        cyrillic.append(&mut extended_cyrillic);
+
+        for sequence in cyrillic {
+            if sequence.matches(c.to_string().as_bytes()) {
+                if let Ok(input_index) = data::INPUT_AND_OUTPUT_INDICES.binary_search_by_key(&(c as u32), |entry| entry.0) {
+                    let output_index_start = data::INPUT_AND_OUTPUT_INDICES[input_index].1 as usize;
+                    let output_index_end = data::INPUT_AND_OUTPUT_INDICES.get(input_index + 1).map(|x| x.1 as usize).unwrap_or(data::OUTPUTS.len());
+                    let prototype_chars = &data::OUTPUTS[output_index_start..output_index_end];
+                    return PrototypeCharsIterator::Slice(prototype_chars.iter())
+                }
+            }
         }
-        else if let Ok(input_index) = data::INPUT_AND_OUTPUT_INDICES.binary_search_by_key(&(c as u32), |entry| entry.0) {
-            let output_index_start = data::INPUT_AND_OUTPUT_INDICES[input_index].1 as usize;
-            let output_index_end = data::INPUT_AND_OUTPUT_INDICES.get(input_index+1).map(|x| x.1 as usize).unwrap_or(data::OUTPUTS.len());
-            let prototype_chars = &data::OUTPUTS[output_index_start..output_index_end];
-            PrototypeCharsIterator::Slice(prototype_chars.iter())
-        } else {
-            PrototypeCharsIterator::One(Some(c))
-        }
+
+        PrototypeCharsIterator::One(Some(c))
     }
 }
 
